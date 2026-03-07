@@ -104,42 +104,33 @@ const FractionSVG = ({ parts, shaded, shape }: { parts: number; shaded: number; 
   );
 };
 
-// ─── Base-10 Blocks ────────────────────────────────────────────────────────
+// ─── Place Value Mat (Redesigned Base-10) ──────────────────────────────────
 const Base10Blocks = ({ hundreds, tens, ones }: { hundreds: number; tens: number; ones: number }) => {
-  const tenBlocks = Array.from({ length: tens }, (_, i) => (
-    <g key={i} transform={`translate(${i * 24}, 0)`}>
-      {Array.from({ length: 10 }, (_, j) => (
-        <rect key={j} x={4} y={j * 10} width={18} height={9}
-          fill="#43A047" stroke="white" strokeWidth={1} rx={1} />
-      ))}
-    </g>
-  ));
-
-  const oneBlocks = Array.from({ length: ones }, (_, i) => (
-    <rect key={i} x={i * 16} y={0} width={14} height={14}
-      fill="#FFB300" stroke="white" strokeWidth={1} rx={2} />
-  ));
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: 10, animation: 'floatItem 3s ease-in-out infinite' }}>
+    <div className="pv-mat">
+      {/* Tens Column */}
       {tens > 0 && (
-        <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#1A237E', textAlign: 'center', marginBottom: 4 }}>
-            {tens} TEN{tens > 1 ? 'S' : ''}
+        <div className="pv-col tens">
+          <div className="pv-header">Tens</div>
+          <div className="pv-blocks-container">
+            {Array.from({ length: tens }, (_, i) => (
+              <div key={`ten-${i}`} className="pv-ten-rod" />
+            ))}
           </div>
-          <svg width={Math.max(tens * 24 + 8, 40)} height={110} viewBox={`0 0 ${Math.max(tens * 24 + 8, 40)} 110`}>
-            {tenBlocks}
-          </svg>
         </div>
       )}
+
+      {/* Ones Column */}
       {ones > 0 && (
-        <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#1A237E', textAlign: 'center', marginBottom: 4 }}>
-            {ones} ONE{ones > 1 ? 'S' : ''}
+        <div className="pv-col ones">
+          <div className="pv-header">Ones</div>
+          <div className="pv-blocks-container">
+            <div className="pv-ones-grid">
+              {Array.from({ length: ones }, (_, i) => (
+                <div key={`one-${i}`} className="pv-one-cube" />
+              ))}
+            </div>
           </div>
-          <svg width={Math.max(ones * 16, 20)} height={20} viewBox={`0 0 ${Math.max(ones * 16, 20)} 20`}>
-            {oneBlocks}
-          </svg>
         </div>
       )}
     </div>
@@ -309,6 +300,39 @@ const WorksheetSection = ({ section, index, voiceEnabled = false, onSpeak }: Wor
         : `Try again! The correct answer is ${q.correctAnswer}.`
       );
     }
+  };
+
+  const handleOrderTap = (qi: number, val: string, isRemove: boolean = false) => {
+    if (answers[qi] !== undefined) return;
+    const q = section.questions[qi];
+
+    setOrderValues(prev => {
+      const current = prev[qi] || [];
+      let next: string[];
+
+      if (isRemove) {
+        next = current.filter(v => v !== val);
+      } else {
+        if (current.includes(val) || current.length >= q.choices.length) return current;
+        next = [...current, val];
+      }
+
+      // Auto-submit if all slots are filled
+      if (next.length === q.choices.length) {
+        setAnswers(ansPrev => ({ ...ansPrev, [qi]: next.join(',') }));
+        const isCorrect = next.join(',') === String(q.correctAnswer);
+        if (isCorrect && (q as any).funFact) setShowFun(fPrev => ({ ...fPrev, [qi]: true }));
+
+        if (voiceEnabled && onSpeak) {
+          onSpeak(isCorrect
+            ? ((q as any).funFact ?? 'Great job! That is correct!')
+            : `Try again! The correct order is ${String(q.correctAnswer).replace(/,/g, ', ')}.`
+          );
+        }
+      }
+
+      return { ...prev, [qi]: next };
+    });
   };
 
   const handleReset = () => { setAnswers({}); setShowFun({}); setInputValues({}); setOrderValues({}); };

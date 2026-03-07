@@ -17,8 +17,8 @@ export interface Question {
   correctIndex?: number;
   correctAnswer?: string | number; // For input and order questions
   type: 'choice',
-      interactiveStyle: 'balloons',
-      interactiveStyle: 'balloons' | 'input' | 'order';
+  interactiveStyle: 'balloons',
+  interactiveStyle: 'balloons' | 'input' | 'order';
   interactiveStyle?: 'balloons' | 'compare-cards'; // New distinct animation styles
   speechText?: string;
   funFact?: string;  // shown after correct answer
@@ -415,16 +415,16 @@ function generatePlaceValue(): Section[] {
   const s1: Question[] = Array.from({ length: 6 }, () => {
     const tens = randInt(1, 4), ones = randInt(0, 9);
     const n = tens * 10 + ones;
-    const correct = `${tens} tens, ${ones} ones`;
-    const opts = shuffle([correct, `${tens + 1} tens, ${ones} ones`, `${tens} tens, ${ones + 1 > 9 ? 0 : ones + 1} ones`]);
+    const correct = `${tens} Tens, ${ones} Ones`;
+    const opts = shuffle([correct, `${tens + 1} Tens, ${ones} Ones`, `${tens > 1 ? tens - 1 : 2} Tens, ${ones + 1} Ones`]);
     return {
-      prompt: `Look at the blocks. How many tens and ones? 🔢`,
+      prompt: `Look at the Place Value Mat! How many Tens and Ones are there? 🔢`,
       base10: { hundreds: 0, tens, ones },
       choices: opts,
       correctIndex: opts.indexOf(correct),
       type: 'choice',
       interactiveStyle: 'balloons',
-      speechText: `Count the ten-blocks and one-blocks. How many tens and ones make the number ${n}?`,
+      speechText: `Count the green ten-rods and the yellow one-cubes. How many tens and ones make the number ${n}?`,
     };
   });
 
@@ -434,13 +434,13 @@ function generatePlaceValue(): Section[] {
     const n = tens * 10 + ones;
     const opts = wrongNums(n, 2, 10, 59).map(String);
     return {
-      prompt: `${tens} tens and ${ones} ones = which number? 🤔`,
+      prompt: `What number is shown on the Place Value Mat? 🤔`,
       base10: { hundreds: 0, tens, ones },
       choices: opts,
       correctIndex: opts.indexOf(String(n)),
       type: 'choice',
       interactiveStyle: 'balloons',
-      speechText: `${tens} tens means ${tens * 10}. Plus ${ones} ones. What is the number?`,
+      speechText: `There are ${tens} tens and ${ones} ones. What number is this?`,
     };
   });
 
@@ -454,9 +454,9 @@ function generatePlaceValue(): Section[] {
     const opts = wrongNums(Number(correct), 2, 0, 9).map(String);
     return {
       prompt: isAskingTens
-        ? `In the number ${n}, what digit is in the TENS place? 🔍`
-        : `In the number ${n}, what digit is in the ONES place? 🔍`,
-      visual: `  ${n}  \n↑ Tens ↑ Ones`,
+        ? `In the number ${n}, which digit is in the TENS place? 🔍`
+        : `In the number ${n}, which digit is in the ONES place? 🔍`,
+      base10: { hundreds: 0, tens: tensDigit, ones: onesDigit },
       choices: opts,
       correctIndex: opts.indexOf(correct),
       type: 'choice',
@@ -782,8 +782,8 @@ function generateTime(): Section[] {
     choices: ['Morning 🌅', 'Night 🌙'],
     correctIndex: a.answer === 'Morning 🌅' ? 0 : 1,
     type: 'choice',
-      interactiveStyle: 'balloons',
-      interactiveStyle: 'balloons' as const,
+    interactiveStyle: 'balloons',
+    interactiveStyle: 'balloons' as const,
     speechText: `${a.text}. Does this usually happen in the morning or at night?`,
   }));
 
@@ -924,8 +924,8 @@ function generateMeasurement(): Section[] {
     choices: [a, b],
     correctIndex: 0,
     type: 'choice',
-      interactiveStyle: 'balloons',
-      interactiveStyle: 'balloons' as const,
+    interactiveStyle: 'balloons',
+    interactiveStyle: 'balloons' as const,
     speechText: `Which is longer: a ${a} or a ${b}?`,
   }));
 
@@ -941,8 +941,8 @@ function generateMeasurement(): Section[] {
     choices: [a, b],
     correctIndex: 0,
     type: 'choice',
-      interactiveStyle: 'balloons',
-      interactiveStyle: 'balloons' as const,
+    interactiveStyle: 'balloons',
+    interactiveStyle: 'balloons' as const,
     speechText: `Which is heavier: ${a} or ${b}?`,
   }));
 
@@ -972,8 +972,8 @@ function generateMeasurement(): Section[] {
     choices: [item.a, item.b],
     correctIndex: 0 as const,
     type: 'choice',
-      interactiveStyle: 'balloons',
-      interactiveStyle: 'balloons' as const,
+    interactiveStyle: 'balloons',
+    interactiveStyle: 'balloons' as const,
     speechText: `Which can hold more water: ${item.a} or ${item.b}?`,
   }));
 
@@ -1103,8 +1103,8 @@ function generateDataGraphing(): Section[] {
     choices: fruits.map(f => f.name),
     correctIndex: maxIdx,
     type: 'choice',
-      interactiveStyle: 'balloons',
-      speechText: `Look at the tally chart. Count the marks. Which group has the most?`,
+    interactiveStyle: 'balloons',
+    speechText: `Look at the tally chart. Count the marks. Which group has the most?`,
   }];
 
   const s2: Question[] = [{
@@ -1113,8 +1113,8 @@ function generateDataGraphing(): Section[] {
     choices: fruits.map(f => f.name),
     correctIndex: minIdx,
     type: 'choice',
-      interactiveStyle: 'balloons',
-      speechText: `Which group has the fewest marks in the tally chart?`,
+    interactiveStyle: 'balloons',
+    speechText: `Which group has the fewest marks in the tally chart?`,
   }];
 
   const s3: Question[] = Array.from({ length: 6 }, () => {
@@ -1221,8 +1221,8 @@ function generateWordProblems(): Section[] {
       return {
         prompt: `🎯 First there were ${a}. Then ${b} more came. How many now?`,
         choices: opts, correctIndex: opts.indexOf(String(a + b)), type: 'choice',
-      interactiveStyle: 'balloons',
-      interactiveStyle: 'balloons' as const,
+        interactiveStyle: 'balloons',
+        interactiveStyle: 'balloons' as const,
         speechText: `First ${a}, then ${b} more arrive. How many in total?`,
       };
     } else {
@@ -1231,8 +1231,8 @@ function generateWordProblems(): Section[] {
       return {
         prompt: `🎯 There were ${total}. ${a} left. How many are still there?`,
         choices: opts, correctIndex: opts.indexOf(String(b)), type: 'choice',
-      interactiveStyle: 'balloons',
-      interactiveStyle: 'balloons' as const,
+        interactiveStyle: 'balloons',
+        interactiveStyle: 'balloons' as const,
         speechText: `There were ${total} and ${a} left. How many remain?`,
       };
     }
