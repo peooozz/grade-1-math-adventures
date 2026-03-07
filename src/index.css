@@ -1,0 +1,586 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ── Yellow & Blue Theme ── */
+    --background: 48 100% 96%;
+    /* pale warm yellow */
+    --foreground: 220 50% 20%;
+    /* deep navy text */
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 50% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 50% 20%;
+
+    --primary: 212 85% 45%;
+    /* strong blue */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 45 100% 70%;
+    /* sunny yellow */
+    --secondary-foreground: 220 50% 20%;
+
+    --muted: 210 30% 92%;
+    --muted-foreground: 215 25% 45%;
+
+    --accent: 45 100% 85%;
+    /* light yellow accent */
+    --accent-foreground: 220 50% 20%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 212 40% 82%;
+    --input: 212 40% 82%;
+    --ring: 212 85% 45%;
+
+    --radius: 1.25rem;
+
+    /* Custom tokens */
+    --yellow-bright: 45 100% 55%;
+    --yellow-soft: 48 100% 90%;
+    --yellow-mid: 46 100% 75%;
+    --blue-deep: 212 85% 42%;
+    --blue-mid: 210 80% 55%;
+    --blue-light: 210 75% 88%;
+    --blue-border: 210 60% 72%;
+    --navy: 220 60% 22%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(160deg, hsl(48, 100%, 95%) 0%, hsl(210, 70%, 95%) 100%);
+    min-height: 100vh;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: 'Baloo 2', cursive;
+  }
+}
+
+@layer components {
+
+  /* ── Section Card ── */
+  .section-card {
+    @apply bg-white rounded-3xl p-7 border-2;
+    border-color: hsl(var(--blue-border));
+    box-shadow: 0 4px 20px hsl(var(--blue-mid) / 0.12), 0 1px 4px hsl(var(--blue-mid) / 0.08);
+  }
+
+  /* ── Section Number Badge ── */
+  .section-number {
+    @apply inline-flex items-center justify-center w-9 h-9 rounded-full text-white font-bold text-sm flex-shrink-0;
+    background: linear-gradient(135deg, hsl(var(--blue-mid)), hsl(var(--blue-deep)));
+  }
+
+  /* ── Main Action Buttons ── */
+  .pill-button {
+    @apply inline-flex items-center justify-center px-6 py-2.5 rounded-full font-bold text-sm transition-all duration-200;
+    background: linear-gradient(135deg, hsl(var(--blue-mid)), hsl(var(--blue-deep)));
+    color: white;
+    box-shadow: 0 3px 10px hsl(var(--blue-mid) / 0.35);
+  }
+
+  .pill-button:hover {
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 6px 18px hsl(var(--blue-mid) / 0.45);
+  }
+
+  .voice-toggle-btn {
+    transition: all 0.2s;
+  }
+
+  .voice-toggle-btn:hover {
+    transform: translateY(-2px) scale(1.04);
+  }
+
+  /* ── Answer Choice Buttons ── */
+  .choice-btn-idle {
+    cursor: pointer;
+    border: 2.5px solid hsl(var(--blue-border));
+    background: hsl(var(--yellow-soft));
+    color: hsl(var(--foreground));
+    transition: all 0.18s;
+  }
+
+  .choice-btn-idle:hover {
+    background: hsl(var(--yellow-mid));
+    border-color: hsl(var(--blue-mid));
+    transform: scale(1.06);
+  }
+
+  /* ── Topic Pills ── */
+  .topic-pill {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-full font-semibold text-sm transition-all duration-200 cursor-pointer;
+    border: 2px solid hsl(var(--blue-border));
+    color: hsl(var(--foreground));
+    background: white;
+  }
+
+  .topic-pill:hover {
+    background: hsl(var(--yellow-soft));
+    transform: scale(1.03);
+  }
+
+  .topic-pill.active {
+    background: linear-gradient(135deg, hsl(var(--blue-mid)), hsl(var(--blue-deep)));
+    color: white;
+    border-color: transparent;
+  }
+
+  /* ── Gradient Title ── */
+  .gradient-title {
+    background: linear-gradient(135deg, hsl(var(--blue-deep)), hsl(var(--yellow-bright)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Floating Emoji ── */
+  .floating-emoji {
+    @apply fixed pointer-events-none select-none;
+    opacity: 0.1;
+    font-size: 2rem;
+    animation: float 6s ease-in-out infinite;
+  }
+
+  /* ── Animations ── */
+  .worksheet-fade-in {
+    animation: worksheetFadeIn 0.45s ease-out both;
+  }
+
+  /* ── Score Badge ── */
+  .score-badge {
+    @apply inline-flex items-center justify-center px-3 py-1 rounded-full font-heading font-bold text-sm;
+    animation: popIn 0.3s ease-out;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* ── Reset Button ── */
+  .reset-btn {
+    @apply inline-flex items-center justify-center px-3 py-1 rounded-full font-semibold text-xs transition-all duration-200;
+    border: 1.5px solid hsl(var(--blue-border));
+    background: white;
+    color: hsl(var(--muted-foreground));
+  }
+
+  .reset-btn:hover {
+    background: hsl(var(--yellow-soft));
+    color: hsl(var(--foreground));
+    transform: scale(1.04);
+  }
+
+  /* ── Voice Button (per question) ── */
+  .voice-btn {
+    @apply inline-flex items-center justify-center w-8 h-8 rounded-full text-sm transition-all duration-150 flex-shrink-0;
+    background: hsl(var(--blue-light));
+    border: 1.5px solid hsl(var(--blue-border));
+  }
+
+  .voice-btn:hover {
+    background: hsl(var(--blue-mid));
+    color: white;
+    transform: scale(1.12);
+  }
+
+  .voice-btn:active {
+    transform: scale(0.95);
+  }
+
+  /* ── Voice Hint Banner ── */
+  .voice-hint {
+    @apply text-center font-body text-sm py-2 px-4 rounded-xl;
+    background: hsl(var(--blue-light));
+    color: hsl(var(--blue-deep));
+    border: 1.5px solid hsl(var(--blue-border));
+    animation: worksheetFadeIn 0.4s ease-out;
+  }
+
+  /* ── Celebration Banner ── */
+  .celebration-banner {
+    @apply text-center font-heading font-bold py-2 px-4 rounded-xl text-sm;
+    background: linear-gradient(135deg, hsl(var(--yellow-mid)), hsl(45, 100%, 65%));
+    color: hsl(220, 60%, 20%);
+    border: 2px solid hsl(var(--yellow-bright));
+    animation: popIn 0.4s ease-out;
+    box-shadow: 0 3px 12px hsl(45, 100%, 60% / 0.4);
+  }
+
+  /* ── Image Grid (for counting) ── */
+  .image-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    align-items: center;
+    padding: 8px;
+  }
+
+  .count-img {
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+    border-radius: 8px;
+  }
+
+  .count-img-lg {
+    width: 68px;
+    height: 68px;
+    object-fit: contain;
+    border-radius: 8px;
+  }
+
+  /* ── Money Image ── */
+  .money-img {
+    height: 54px;
+    object-fit: contain;
+    border-radius: 6px;
+  }
+
+  /* ── Shape SVG ── */
+  .shape-display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12px;
+  }
+
+  /* ── Animated Sequence Boxes ── */
+  .sequence-container {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 10px;
+  }
+
+  .sequence-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 48px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 1.15rem;
+    color: white;
+    background: linear-gradient(135deg, hsl(var(--blue-mid)), hsl(var(--blue-deep)));
+    box-shadow: 0 4px 10px hsl(var(--blue-mid) / 0.3);
+    border: 2px solid hsl(var(--blue-light));
+    animation: popInSequence 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  }
+
+  .sequence-box.missing {
+    background: white;
+    border: 2.5px dashed hsl(var(--blue-border));
+    color: transparent;
+    box-shadow: none;
+  }
+
+  /* ── Animated 100-Chart Grid ── */
+  .grid-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    padding: 12px;
+    background: hsl(var(--blue-light) / 0.3);
+    border-radius: 12px;
+    justify-content: center;
+    width: max-content;
+    margin: 0 auto;
+  }
+
+  .grid-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: hsl(var(--navy));
+    background: white;
+    border: 2px solid hsl(var(--blue-border));
+    animation: popInSequence 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  }
+
+  .grid-box.missing {
+    background: hsl(var(--yellow-soft));
+    border: 2.5px dashed hsl(var(--yellow-bright));
+    color: transparent;
+  }
+
+  /* ── Interactive Order Slots and Pills ── */
+  .order-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 24px;
+    padding: 12px;
+  }
+
+  .order-slot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 1.35rem;
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .order-slot.empty {
+    background: hsl(var(--blue-light) / 0.5);
+    border: 3px dashed hsl(var(--blue-border));
+    color: transparent;
+  }
+
+  .order-slot.filled {
+    background: linear-gradient(135deg, hsl(var(--blue-mid)), hsl(var(--blue-deep)));
+    border: 2px solid hsl(var(--blue-light));
+    color: white;
+    box-shadow: 0 4px 10px hsl(var(--blue-mid) / 0.35);
+    cursor: pointer;
+    animation: popInSequence 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  }
+
+  .order-slot.filled:hover {
+    transform: translateY(-4px) scale(1.05);
+    background: hsl(var(--destructive));
+    border-color: hsl(var(--destructive));
+  }
+
+  .order-pill-bank {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    padding: 16px;
+    background: hsl(var(--yellow-soft) / 0.4);
+    border-radius: 16px;
+    border: 2px dashed hsl(var(--yellow-mid));
+  }
+
+  .order-pill {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: 1.35rem;
+    background: white;
+    color: hsl(var(--navy));
+    border: 3px solid hsl(var(--blue-border));
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 8px hsl(220 50% 20% / 0.08);
+  }
+
+  .order-pill:hover {
+    transform: translateY(-4px) scale(1.1);
+    border-color: hsl(var(--blue-mid));
+    box-shadow: 0 8px 16px hsl(var(--blue-mid) / 0.2);
+  }
+
+  .order-pill:active {
+    transform: scale(0.95);
+  }
+
+  /* ── Interactive Balloons & Cards ── */
+  .balloon-choice {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 65px;
+    height: 75px;
+    border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+    font-weight: 800;
+    font-size: 1.5rem;
+    color: white;
+    cursor: pointer;
+    box-shadow: inset -5px -5px 15px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.2);
+    animation: balloonFloat 4s ease-in-out infinite, popIn 0.4s ease-out both;
+    transition: transform 0.2s;
+  }
+
+  .balloon-choice::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 10px solid inherit;
+    /* inherits color from JS */
+  }
+
+  .balloon-choice:hover {
+    transform: scale(1.1) translateY(-10px);
+  }
+
+  .compare-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 90px;
+    height: 120px;
+    background: white;
+    border-radius: 16px;
+    border: 3px solid hsl(var(--blue-border));
+    font-family: 'Baloo 2', cursive;
+    font-size: 3rem;
+    font-weight: 900;
+    color: hsl(var(--navy));
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .compare-card::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    width: 60px;
+    height: 60px;
+    background: radial-gradient(circle, hsl(var(--yellow-soft)) 0%, transparent 60%);
+    opacity: 0.5;
+  }
+
+  .compare-slot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: hsl(var(--blue-light) / 0.5);
+    border: 3px dashed hsl(var(--blue-border));
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: white;
+    transition: all 0.3s;
+  }
+
+  .compare-slot.filled {
+    background: linear-gradient(135deg, hsl(var(--blue-mid)), hsl(var(--blue-deep)));
+    border: 2px solid white;
+    box-shadow: 0 4px 12px hsl(var(--blue-mid) / 0.4);
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  }
+}
+
+/* ── Keyframes ── */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-14px) rotate(4deg);
+  }
+}
+
+@keyframes worksheetFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+
+  70% {
+    transform: scale(1.08);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes popInSequence {
+  0% {
+    opacity: 0;
+    transform: translateY(15px) scale(0.8);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Print Styles ── */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .floating-emoji {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    font-size: 13pt;
+  }
+
+  .section-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 1rem;
+    box-shadow: none !important;
+    border: 1.5px solid #ccc !important;
+  }
+
+  .print-header {
+    display: block !important;
+  }
+
+  @page {
+    margin: 1.5cm;
+    size: A4;
+  }
+}
