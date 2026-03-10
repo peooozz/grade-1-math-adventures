@@ -597,82 +597,217 @@ function generateComparing(): Section[] {
 
 // ============ 3 · PLACE VALUE & BASE 10 =====================================
 function generatePlaceValue(): Section[] {
-  // 3a: Tens and ones with base-10 visuals
-  const s1: Question[] = Array.from({ length: 6 }, () => {
-    const tens = randInt(1, 4), ones = randInt(0, 9);
+  // 1: Blocks -> Number (Choice)
+  const s1: Question[] = Array.from({ length: 5 }, () => {
+    const tens = randInt(1, 9), ones = randInt(0, 9);
     const n = tens * 10 + ones;
-    const correct = `${tens} Tens, ${ones} Ones`;
-    const opts = shuffle([correct, `${tens + 1} Tens, ${ones} Ones`, `${tens > 1 ? tens - 1 : 2} Tens, ${ones + 1} Ones`]);
+    const opts = wrongNums(n, 2, 10, 99).map(String);
     return {
-      prompt: `Look at the Place Value Mat! How many Tens and Ones are there? 🔢`,
-      base10: { hundreds: 0, tens, ones },
-      choices: opts,
-      correctIndex: opts.indexOf(correct),
-      type: 'choice',
-      interactiveStyle: 'balloons',
-      speechText: `Count the green ten-rods and the yellow one-cubes. How many tens and ones make the number ${n}?`,
-    };
-  });
-
-  // 3b: Tens and ones → number
-  const s2: Question[] = Array.from({ length: 6 }, () => {
-    const tens = randInt(1, 5), ones = randInt(0, 9);
-    const n = tens * 10 + ones;
-    const opts = wrongNums(n, 2, 10, 59).map(String);
-    return {
-      prompt: `What number is shown on the Place Value Mat? 🤔`,
+      prompt: `Look at the Base-10 blocks! What number is this? 🧱`,
       base10: { hundreds: 0, tens, ones },
       choices: opts,
       correctIndex: opts.indexOf(String(n)),
       type: 'choice',
       interactiveStyle: 'balloons',
-      speechText: `There are ${tens} tens and ${ones} ones. What number is this?`,
+      speechText: `Count the tens and ones blocks. What number do they make?`,
+      funFact: `${tens} Tens and ${ones} Ones makes ${n}!`,
     };
   });
 
-  // 3c: Identify digit value
-  const s3: Question[] = Array.from({ length: 6 }, () => {
-    const n = randInt(11, 59);
-    const tensDigit = Math.floor(n / 10);
-    const onesDigit = n % 10;
-    const isAskingTens = Math.random() > 0.5;
-    const correct = String(isAskingTens ? tensDigit : onesDigit);
-    const opts = wrongNums(Number(correct), 2, 0, 9).map(String);
+  // 2: Blocks -> Tens and Ones (Choice)
+  const s2: Question[] = Array.from({ length: 5 }, () => {
+    const tens = randInt(1, 4), ones = randInt(1, 9);
+    const correct = `${tens} Tens, ${ones} Ones`;
+    const wrong1 = `${tens + 1} Tens, ${ones} Ones`;
+    const wrong2 = `${tens} Tens, ${ones > 1 ? ones - 1 : ones + 1} Ones`;
+    const opts = shuffle([correct, wrong1, wrong2]);
     return {
-      prompt: isAskingTens
-        ? `In the number ${n}, which digit is in the TENS place? 🔍`
-        : `In the number ${n}, which digit is in the ONES place? 🔍`,
-      base10: { hundreds: 0, tens: tensDigit, ones: onesDigit },
+      prompt: `How many Tens and Ones are shown? 🔢`,
+      base10: { hundreds: 0, tens, ones },
       choices: opts,
       correctIndex: opts.indexOf(correct),
       type: 'choice',
       interactiveStyle: 'balloons',
-      speechText: isAskingTens
-        ? `In the number ${n}, what digit is in the tens place?`
-        : `In the number ${n}, what digit is in the ones place?`,
+      speechText: `How many tens and how many ones are there?`,
+      funFact: `Awesome counting!`,
     };
   });
 
-  // 3d: Number → words (teens)
-  const s4: Question[] = Array.from({ length: 6 }, () => {
-    const n = randInt(10, 20);
-    const word = numberWords[n];
-    const wrong = pick(numberWords.filter(w => w !== word).slice(10, 21), 2);
-    const opts = shuffle([word, ...wrong]);
+  // 3: Text -> Number (Choice)
+  const s3: Question[] = Array.from({ length: 5 }, () => {
+    const tens = randInt(1, 9), ones = randInt(0, 9);
+    const n = tens * 10 + ones;
+    const opts = wrongNums(n, 2, 10, 99).map(String);
     return {
-      prompt: `How do we say the number ${n} in words? 🗣️`,
-      visual: `  ${n}  `,
+      prompt: `What number is ${tens} Tens and ${ones} Ones?`,
+      visual: `${tens} Tens   &   ${ones} Ones`,
       choices: opts,
-      correctIndex: opts.indexOf(word),
+      correctIndex: opts.indexOf(String(n)),
       type: 'choice',
       interactiveStyle: 'balloons',
-      speechText: `What is the word for ${n}?`,
+      speechText: `What number has ${tens} tens and ${ones} ones?`,
     };
   });
 
-  // 3e: Match Tens and Ones
-  const s5: Question[] = Array.from({ length: 6 }, () => {
-    // Generate 4 distinct number pairs per question
+  // 4: Number -> Text (Choice)
+  const s4: Question[] = Array.from({ length: 5 }, () => {
+    const tens = randInt(1, 9), ones = randInt(0, 9);
+    const n = tens * 10 + ones;
+    const correct = `${tens} Tens, ${ones} Ones`;
+
+    let w1 = `${ones} Tens, ${tens} Ones`;
+    let w2 = `${tens} Tens, ${ones > 0 ? ones - 1 : ones + 1} Ones`;
+    if (tens === ones) w1 = `${tens + 1} Tens, ${ones} Ones`;
+
+    const opts = shuffle([correct, w1, w2]);
+    return {
+      prompt: `How many Tens and Ones are in ${n}?`,
+      visual: `   ${n}   `,
+      choices: opts,
+      correctIndex: opts.indexOf(correct),
+      type: 'choice',
+      interactiveStyle: 'balloons',
+      speechText: `How many tens and ones make up the number ${n}?`,
+    };
+  });
+
+  // 5: Value of Digit (Choice)
+  const s5: Question[] = Array.from({ length: 5 }, () => {
+    const n = randInt(11, 99);
+    const tensDigit = Math.floor(n / 10);
+    const onesDigit = n % 10;
+    const askingTens = Math.random() > 0.5;
+    const correct = askingTens ? String(tensDigit * 10) : String(onesDigit);
+
+    let wrong1 = askingTens ? String(tensDigit) : String(onesDigit * 10);
+    let wrong2 = askingTens ? String((tensDigit + 1) * 10) : String((onesDigit + 1) % 10);
+
+    // Ensure uniqueness
+    const opts = Array.from(new Set([correct, wrong1, wrong2]));
+    while (opts.length < 3) opts.push(String(randInt(100, 150)));
+    const shuffledOpts = shuffle(opts);
+
+    return {
+      prompt: `In the number ${n}, what is the VALUE of the ${askingTens ? tensDigit : onesDigit}?`,
+      visual: `   ${n}   `,
+      choices: shuffledOpts,
+      correctIndex: shuffledOpts.indexOf(correct),
+      type: 'choice',
+      interactiveStyle: 'balloons',
+      speechText: `In the number ${n}, what is the value of the digit ${askingTens ? tensDigit : onesDigit}?`,
+      funFact: `The ${askingTens ? tensDigit : onesDigit} is in the ${askingTens ? 'tens' : 'ones'} place, so its value is ${correct}!`,
+    };
+  });
+
+  // 6: Identify the Place (Choice)
+  const s6: Question[] = Array.from({ length: 5 }, () => {
+    const n = randInt(11, 99);
+    const tensDigit = Math.floor(n / 10);
+    const onesDigit = n % 10;
+    const askingTens = Math.random() > 0.5;
+    const correct = String(askingTens ? tensDigit : onesDigit);
+    const opts = wrongNums(Number(correct), 2, 0, 9).map(String);
+    return {
+      prompt: `In the number ${n}, which digit is in the ${askingTens ? 'TENS' : 'ONES'} place? 🔍`,
+      visual: `   ${n}   `,
+      choices: opts,
+      correctIndex: opts.indexOf(correct),
+      type: 'choice',
+      interactiveStyle: 'balloons',
+      speechText: `In the number ${n}, what digit is in the ${askingTens ? 'tens' : 'ones'} place?`,
+      funFact: `Yes! ${correct} is in the ${askingTens ? 'tens' : 'ones'} place.`,
+    };
+  });
+
+  // 7: Expanded Form -> Number (Input)
+  const s7: Question[] = Array.from({ length: 5 }, () => {
+    const tens = randInt(1, 9), ones = randInt(1, 9);
+    const ans = tens * 10 + ones;
+    return {
+      prompt: `What number is this? (Type your answer) ⌨️`,
+      visual: `${tens * 10} + ${ones} = ?`,
+      choices: [],
+      correctAnswer: ans,
+      type: 'input',
+      speechText: `What is ${tens * 10} plus ${ones}?`,
+      funFact: `${tens * 10} and ${ones} make ${ans}!`,
+    };
+  });
+
+  // 8: Number -> Expanded Form (Choice)
+  const s8: Question[] = Array.from({ length: 5 }, () => {
+    const tens = randInt(1, 9), ones = randInt(1, 9);
+    const n = tens * 10 + ones;
+    const correct = `${tens * 10} + ${ones}`;
+    const opts = shuffle([correct, `${tens} + ${ones}`, `${ones * 10} + ${tens}`]);
+    return {
+      prompt: `How do you write ${n} in expanded form?`,
+      visual: `   ${n}   `,
+      choices: opts,
+      correctIndex: opts.indexOf(correct),
+      type: 'choice',
+      interactiveStyle: 'compare-cards',
+      speechText: `Which of these is the expanded form of ${n}?`,
+      funFact: `Great job! ${n} breaks down into ${tens * 10} and ${ones}!`,
+    };
+  });
+
+  // 9: 10 More (Choice)
+  const s9: Question[] = Array.from({ length: 5 }, () => {
+    const n = randInt(10, 89);
+    const ans = n + 10;
+    const opts = wrongNums(ans, 2, 10, 99).map(String);
+    return {
+      prompt: `What is 10 MORE than ${n}? 📈`,
+      visual: `${n} + 10 = ?`,
+      choices: opts,
+      correctIndex: opts.indexOf(String(ans)),
+      type: 'choice',
+      interactiveStyle: 'balloons',
+      speechText: `What number is 10 more than ${n}?`,
+      funFact: `Adding 10 makes the tens digit go up by 1! ${n} becomes ${ans}!`,
+    };
+  });
+
+  // 10: 10 Less (Choice)
+  const s10: Question[] = Array.from({ length: 5 }, () => {
+    const n = randInt(20, 99);
+    const ans = n - 10;
+    const opts = wrongNums(ans, 2, 10, 89).map(String);
+    return {
+      prompt: `What is 10 LESS than ${n}? 📉`,
+      visual: `${n} - 10 = ?`,
+      choices: opts,
+      correctIndex: opts.indexOf(String(ans)),
+      type: 'choice',
+      interactiveStyle: 'balloons',
+      speechText: `What number is 10 less than ${n}?`,
+      funFact: `Subtracting 10 makes the tens digit go down by 1! ${n} becomes ${ans}!`,
+    };
+  });
+
+  // 11: Number Words to Numbers (Choice)
+  const s11: Question[] = Array.from({ length: 5 }, () => {
+    const words = ['twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+    const tensIdx = randInt(0, 7);
+    const ones = randInt(1, 9);
+    const n = (tensIdx + 2) * 10 + ones;
+    const word = `${words[tensIdx]}-${numberWords[ones]}`;
+    const opts = wrongNums(n, 2, 20, 99).map(String);
+    return {
+      prompt: `Read the word and choose the number! 📖`,
+      visual: ` ${word.toUpperCase()} `,
+      choices: opts,
+      correctIndex: opts.indexOf(String(n)),
+      type: 'choice',
+      interactiveStyle: 'balloons',
+      speechText: `What number is ${word}?`,
+      funFact: `Spot on! That spells ${n}.`,
+    };
+  });
+
+  // 12: Match Pairs
+  const s12: Question[] = Array.from({ length: 5 }, () => {
     const pairs = new Set<string>();
     const matchPairs: { left: string; right: string }[] = [];
     while (matchPairs.length < 4) {
@@ -686,19 +821,26 @@ function generatePlaceValue(): Section[] {
     }
     return {
       prompt: `Match the Tens and Ones to the correct number! 🔗`,
-      choices: [], // Not needed for match
+      choices: [],
       type: 'match',
-      matchPairs: matchPairs, // We shuffle left/right in the UI renderer
+      matchPairs: matchPairs,
       speechText: `Tap a box on the left, then find its matching number on the right!`,
     };
   });
 
   return [
-    { title: '🟦 Tens and Ones (Blocks)', questions: s1 },
-    { title: '🔢 Blocks → Number', questions: s2 },
-    { title: '🔍 Digit in Tens/Ones Place', questions: s3 },
-    { title: '🗣️ Numbers in Words', questions: s4 },
-    { title: '🔗 Match the Pairs', questions: s5 },
+    { title: '🟦 Blocks to Number', questions: s1 },
+    { title: '🧱 Blocks to Tens & Ones', questions: s2 },
+    { title: '🔢 Tens & Ones to Number', questions: s3 },
+    { title: '🔙 Number to Tens & Ones', questions: s4 },
+    { title: '💡 Value of the Digit', questions: s5 },
+    { title: '🔍 Identify the Place', questions: s6 },
+    { title: '➕ Expanded Form (Type It)', questions: s7 },
+    { title: '✍️ Write in Expanded Form', questions: s8 },
+    { title: '📈 10 More', questions: s9 },
+    { title: '📉 10 Less', questions: s10 },
+    { title: '🗣️ Words to Numbers', questions: s11 },
+    { title: '🔗 Match Tens & Ones', questions: s12 },
   ];
 }
 
@@ -774,11 +916,136 @@ function generateAddition(): Section[] {
     };
   });
 
+  // s5: Make 10 Match
+  const s5: Question[] = Array.from({ length: 5 }, () => {
+    const pairs = new Set<string>();
+    const matchPairs: { left: string; right: string }[] = [];
+    while (matchPairs.length < 4) {
+      const a = randInt(1, 9);
+      if (!pairs.has(String(a))) {
+        pairs.add(String(a));
+        pairs.add(String(10 - a));
+        matchPairs.push({ left: `${a} + ?`, right: String(10 - a) });
+      }
+    }
+    return {
+      prompt: `Match the numbers that add up to 10! 🎯`,
+      choices: [],
+      type: 'match',
+      matchPairs: matchPairs,
+      speechText: `Which numbers make 10 together? Match them up!`,
+    };
+  });
+
+  // s6: Money Addition
+  const s6: Question[] = Array.from({ length: 6 }, () => {
+    const c10Count = randInt(1, 3);
+    const c5Count = randInt(1, 4);
+    const total = (c10Count * 10) + (c5Count * 5);
+    const choices = shuffle([...wrongNums(total, 2, 10, 50).map(n => `₹${n}`), `₹${total}`]);
+    return {
+      prompt: `Add the coins to find the total! 🪙`,
+      countGroups: [
+        { imageUrl: IMG.c10, count: c10Count, label: '₹10' },
+        { imageUrl: IMG.c5, count: c5Count, label: '₹5' },
+      ],
+      choices,
+      correctIndex: choices.indexOf(`₹${total}`),
+      type: 'choice',
+      interactiveStyle: 'balloons',
+      speechText: `Count the ten rupee and five rupee coins. How much money is there in total?`,
+      funFact: `Awesome! You added ₹10s and ₹5s to get ₹${total}!`,
+    };
+  });
+
+  // s7: True or False Addition
+  const s7: Question[] = Array.from({ length: 6 }, () => {
+    const a = randInt(1, 15);
+    const b = randInt(1, 15);
+    const isTrue = Math.random() > 0.5;
+    const displayedSum = isTrue ? a + b : a + b + (randInt(1, 4) * (Math.random() > 0.5 ? 1 : -1));
+    const ans = isTrue ? 'True ✅' : 'False ❌';
+    const opts = ['True ✅', 'False ❌'];
+    return {
+      prompt: `True or False? \n ${a} + ${b} = ${displayedSum}`,
+      choices: opts,
+      correctIndex: opts.indexOf(ans),
+      type: 'choice',
+      interactiveStyle: 'balloons',
+      speechText: `Is it true that ${a} plus ${b} equals ${displayedSum}?`,
+      funFact: isTrue ? `Spot on! It's true!` : `Good save! The real answer is ${a + b}.`,
+    };
+  });
+
+  // s8: Double It!
+  const s8: Question[] = Array.from({ length: 6 }, () => {
+    const img = randImg();
+    const a = randInt(1, 8);
+    const choices = shuffle([...wrongNums(a + a, 2, 2, 20).map(String), String(a + a)]);
+    return {
+      prompt: `Double it! ${a} + ${a} = ? ✌️`,
+      countGroups: [
+        { imageUrl: img, count: a, label: `${a}` },
+        { imageUrl: img, count: a, label: `${a}` },
+      ],
+      choices,
+      correctIndex: choices.indexOf(String(a + a)),
+      type: 'choice',
+      interactiveStyle: 'balloons',
+      speechText: `What is double of ${a}? Add ${a} and ${a}.`,
+      funFact: `Doubles are twice as nice! ${a} + ${a} = ${a + a}!`,
+    };
+  });
+
+  // s9: Dice Addition
+  const s9: Question[] = Array.from({ length: 6 }, () => {
+    const a = randInt(1, 6), b = randInt(1, 6);
+    const sum = a + b;
+    const choices = shuffle([...wrongNums(sum, 2, 2, 12).map(String), String(sum)]);
+    return {
+      prompt: `Roll the dice & add! 🎲`,
+      visual: `${'🎲'.repeat(a)}   +   ${'🎲'.repeat(b)} \n ${a} + ${b} = ?`,
+      choices,
+      correctIndex: choices.indexOf(String(sum)),
+      type: 'choice',
+      interactiveStyle: 'balloons',
+      speechText: `Read the numbers from the dice, ${a} and ${b}. What do they add up to?`,
+    };
+  });
+
+  // s10: Missing Addend Match
+  const s10: Question[] = Array.from({ length: 5 }, () => {
+    const matchPairs: { left: string; right: string }[] = [];
+    const used = new Set<string>();
+    while (matchPairs.length < 4) {
+      const sum = randInt(10, 20);
+      const a = randInt(1, sum - 1);
+      const b = sum - a;
+      if (!used.has(String(b))) {
+        used.add(String(b));
+        matchPairs.push({ left: `${a} + ? = ${sum}`, right: String(b) });
+      }
+    }
+    return {
+      prompt: `Match the missing number to complete the equation! 🧩`,
+      choices: [],
+      type: 'match',
+      matchPairs: matchPairs,
+      speechText: `Match the equation on the left to its missing number on the right!`,
+    };
+  });
+
   return [
     { title: '🖼️ Add the Pictures', questions: s1 },
     { title: '➕ Addition Facts (Fast!)', questions: s2 },
     { title: '❓ Find the Missing Number', questions: s3 },
     { title: '📖 Addition Word Problems', questions: s4 },
+    { title: '🎯 Make 10 Match', questions: s5 },
+    { title: '🪙 Money Addition', questions: s6 },
+    { title: '✅ True or False?', questions: s7 },
+    { title: '✌️ Double It!', questions: s8 },
+    { title: '🎲 Dice Addition', questions: s9 },
+    { title: '🧩 Missing Number Match', questions: s10 },
   ];
 }
 
@@ -852,11 +1119,138 @@ function generateSubtraction(): Section[] {
     };
   });
 
+  // s5: Eating the Cake
+  const s5: Question[] = Array.from({ length: 6 }, () => {
+    const total = randInt(4, 10);
+    const eaten = randInt(1, total - 1);
+    const left = total - eaten;
+    const choices = shuffle([...wrongNums(left, 2, 0, 10).map(String), String(left)]);
+    return {
+      prompt: `We had ${total} cakes 🍰. We ate ${eaten}. How many are left?`,
+      countGroups: [
+        { imageUrl: IMG.cake, count: left, label: `Leftovers` }
+      ],
+      visual: `${total} − ${eaten} = ?`,
+      choices,
+      correctIndex: choices.indexOf(String(left)),
+      type: 'choice',
+      interactiveStyle: 'balloons',
+      speechText: `If we have ${total} cakes and we eat ${eaten}, how many cakes are left?`,
+      funFact: `Yummy! We have ${left} cakes left to enjoy!`,
+    };
+  });
+
+  // s6: Money Subtraction
+  const s6: Question[] = Array.from({ length: 6 }, () => {
+    const myMoney = pick([10, 20, 50], 1)[0];
+    const spend = randInt(1, myMoney - 1);
+    const left = myMoney - spend;
+    const choices = shuffle([...wrongNums(left, 2, 1, myMoney).map(n => `₹${n}`), `₹${left}`]);
+    const noteImg = myMoney === 10 ? IMG.n10 : myMoney === 20 ? IMG.n20 : IMG.n50;
+
+    return {
+      prompt: `You have ₹${myMoney}. You spend ₹${spend}. How much is left? 💸`,
+      countGroups: [
+        { imageUrl: noteImg, count: 1, label: `My ₹${myMoney}` }
+      ],
+      visual: `₹${myMoney} − ₹${spend} = ?`,
+      choices,
+      correctIndex: choices.indexOf(`₹${left}`),
+      type: 'choice',
+      interactiveStyle: 'balloons',
+      speechText: `If you have ${myMoney} rupees and spend ${spend} rupees, how much money do you get back?`,
+      funFact: `You keep ₹${left} in your piggy bank! 🐷`,
+    };
+  });
+
+  // s7: True or False Subtraction
+  const s7: Question[] = Array.from({ length: 6 }, () => {
+    const a = randInt(5, 20);
+    const b = randInt(1, a - 1);
+    const isTrue = Math.random() > 0.5;
+    const displayedDiff = isTrue ? a - b : a - b + (randInt(1, 3) * (Math.random() > 0.5 ? 1 : -1));
+    const ans = isTrue ? 'True ✅' : 'False ❌';
+    const opts = ['True ✅', 'False ❌'];
+    return {
+      prompt: `True or False? \n ${a} − ${b} = ${displayedDiff}`,
+      choices: opts,
+      correctIndex: opts.indexOf(ans),
+      type: 'choice',
+      interactiveStyle: 'balloons',
+      speechText: `Is it true that ${a} minus ${b} equals ${displayedDiff}?`,
+      funFact: isTrue ? `Spot on! It's true!` : `Good save! The real answer is ${a - b}.`,
+    };
+  });
+
+  // s8: Subtracting from 10
+  const s8: Question[] = Array.from({ length: 6 }, () => {
+    const a = randInt(1, 9);
+    const left = 10 - a;
+    const choices = shuffle([...wrongNums(left, 2, 0, 10).map(String), String(left)]);
+    return {
+      prompt: `Fast Facts! 10 − ${a} = ? ⚡`,
+      visual: `10 − ${a} = ?`,
+      choices,
+      correctIndex: choices.indexOf(String(left)),
+      type: 'choice',
+      interactiveStyle: 'balloons',
+      speechText: `What is 10 minus ${a}?`,
+      funFact: `10 minus ${a} is ${left}! You are lightning fast! ⚡`,
+    };
+  });
+
+  // s9: Balloon Pop
+  const s9: Question[] = Array.from({ length: 6 }, () => {
+    const total = randInt(5, 12);
+    const pop = randInt(1, total - 1);
+    const left = total - pop;
+    const choices = shuffle([...wrongNums(left, 2, 0, 12).map(String), String(left)]);
+    return {
+      prompt: `There were ${total} balloons 🎈. *POP!* ${pop} popped. How many left?`,
+      countGroups: [
+        { imageUrl: IMG.balloon, count: left, label: `${left} safe!` }
+      ],
+      choices,
+      correctIndex: choices.indexOf(String(left)),
+      type: 'choice',
+      interactiveStyle: 'balloons',
+      speechText: `You had ${total} balloons and ${pop} of them popped. How many are left?`,
+    };
+  });
+
+  // s10: Match the Difference
+  const s10: Question[] = Array.from({ length: 5 }, () => {
+    const matchPairs: { left: string; right: string }[] = [];
+    const used = new Set<string>();
+    while (matchPairs.length < 4) {
+      const a = randInt(5, 15);
+      const b = randInt(1, a - 1);
+      const diff = a - b;
+      if (!used.has(String(diff))) {
+        used.add(String(diff));
+        matchPairs.push({ left: `${a} − ${b}`, right: String(diff) });
+      }
+    }
+    return {
+      prompt: `Match the equation to its correct answer! 🧩`,
+      choices: [],
+      type: 'match',
+      matchPairs: matchPairs,
+      speechText: `Match each subtraction problem on the left with its answer on the right!`,
+    };
+  });
+
   return [
     { title: '🖼️ Take Away Pictures', questions: s1 },
     { title: '➖ Subtraction Facts (Fast!)', questions: s2 },
     { title: '❓ Find the Missing Number', questions: s3 },
     { title: '📖 Subtraction Stories', questions: s4 },
+    { title: '🍰 Eating the Cake', questions: s5 },
+    { title: '💸 Money Subtraction', questions: s6 },
+    { title: '✅ True or False?', questions: s7 },
+    { title: '⚡ Subtracting from 10', questions: s8 },
+    { title: '🎈 Balloon Pop!', questions: s9 },
+    { title: '🧩 Match the Difference', questions: s10 },
   ];
 }
 
