@@ -62,7 +62,9 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Nunito', sans-serif;
-    background: linear-gradient(160deg, hsl(48, 100%, 95%) 0%, hsl(210, 70%, 95%) 100%);
+    background: linear-gradient(-45deg, hsl(48, 100%, 95%), hsl(210, 70%, 95%), hsl(48, 100%, 92%), hsl(210, 70%, 92%));
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
     min-height: 100vh;
   }
 
@@ -102,6 +104,34 @@
   .pill-button:hover {
     transform: translateY(-2px) scale(1.04);
     box-shadow: 0 6px 18px hsl(var(--blue-mid) / 0.45);
+    animation: wiggle 0.5s ease-in-out;
+  }
+
+  .pill-button:active {
+    transform: scale(0.95);
+  }
+
+  .check-btn {
+    @apply px-5 py-2 rounded-2xl font-bold text-sm transition-all duration-200 border-none cursor-pointer;
+    background: linear-gradient(135deg, hsl(var(--blue-mid)), hsl(var(--blue-deep)));
+    color: white;
+    box-shadow: 0 4px 12px hsl(var(--blue-mid) / 0.3);
+  }
+
+  .check-btn:hover:not(:disabled) {
+    transform: scale(1.08) rotate(1deg);
+    animation: wiggle 0.5s ease-in-out;
+  }
+
+  .check-btn:active:not(:disabled) {
+    transform: scale(0.92);
+  }
+
+  .check-btn:disabled {
+    background: #E0E0E0;
+    color: #9E9E9E;
+    box-shadow: none;
+    cursor: default;
   }
 
   .voice-toggle-btn {
@@ -110,6 +140,11 @@
 
   .voice-toggle-btn:hover {
     transform: translateY(-2px) scale(1.04);
+    animation: wiggle 0.5s ease-in-out;
+  }
+
+  .voice-toggle-btn:active {
+    transform: scale(0.95);
   }
 
   /* ── Answer Choice Buttons ── */
@@ -125,6 +160,11 @@
     background: hsl(var(--yellow-mid));
     border-color: hsl(var(--blue-mid));
     transform: scale(1.06);
+    animation: wiggle 0.5s ease-in-out;
+  }
+
+  .choice-btn-idle:active {
+    transform: scale(0.92);
   }
 
   /* ── Topic Pills ── */
@@ -138,6 +178,7 @@
   .topic-pill:hover {
     background: hsl(var(--yellow-soft));
     transform: scale(1.03);
+    animation: wiggle 0.5s ease-in-out;
   }
 
   .topic-pill.active {
@@ -186,6 +227,11 @@
     background: hsl(var(--yellow-soft));
     color: hsl(var(--foreground));
     transform: scale(1.04);
+    animation: wiggle 0.4s ease-in-out;
+  }
+
+  .reset-btn:active {
+    transform: scale(0.9);
   }
 
   /* ── Voice Button (per question) ── */
@@ -417,11 +463,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 65px;
-    height: 75px;
-    border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+    min-width: 80px;
+    height: auto;
+    min-height: 85px;
+    padding: 12px 18px;
+    border-radius: 40px 40px 50px 50px / 50%;
     font-weight: 800;
-    font-size: 1.5rem;
+    font-size: 1.25rem;
+    line-height: 1.1;
+    text-align: center;
     color: white;
     cursor: pointer;
     box-shadow: inset -5px -5px 15px rgba(0, 0, 0, 0.15), 0 4px 10px rgba(0, 0, 0, 0.2);
@@ -497,9 +547,108 @@
     box-shadow: 0 4px 12px hsl(var(--blue-mid) / 0.4);
     animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
   }
+
+  /* ── Fun Input Fields ── */
+  .fun-input {
+    @apply w-24 px-4 py-2 text-center font-bold text-xl rounded-2xl transition-all duration-300;
+    border: 3px solid hsl(var(--blue-border));
+    background: white;
+    color: hsl(var(--navy));
+    font-family: 'Nunito', sans-serif;
+  }
+
+  .fun-input:focus {
+    @apply outline-none scale-110;
+    border-color: hsl(var(--blue-mid));
+    box-shadow: 0 0 0 4px hsl(var(--blue-mid) / 0.2), 0 8px 20px rgba(0, 0, 0, 0.1);
+    background: hsl(var(--yellow-soft) / 0.3);
+  }
+
+  /* ── Feedback Banners ── */
+  .correct-feedback {
+    @apply mt-3 text-center rounded-xl py-2 px-4 font-heading font-extrabold text-sm;
+    color: #2E7D32;
+    background: #E8F5E9;
+    border: 2px solid #81C784;
+    animation: bouncePulse 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+  }
+
+  .wrong-feedback {
+    @apply mt-3 text-center rounded-xl py-2 px-4 font-heading font-extrabold text-sm;
+    color: #C62828;
+    background: #FFEBEE;
+    border: 2px solid #EF5350;
+    animation: shake 0.4s ease-in-out;
+    box-shadow: 0 4px 12px rgba(239, 83, 80, 0.2);
+  }
 }
 
 /* ── Keyframes ── */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes bouncePulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+
+  70% {
+    transform: scale(0.95);
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes glowPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 213, 79, 0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 15px rgba(255, 213, 79, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 213, 79, 0);
+  }
+}
+
+@keyframes wiggle {
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(-3deg);
+  }
+
+  75% {
+    transform: rotate(3deg);
+  }
+}
+
 @keyframes float {
 
   0%,
@@ -549,6 +698,112 @@
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Match The Pairs ── */
+.match-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.match-item {
+  padding: 18px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 1.25rem;
+  font-family: 'Nunito', sans-serif;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  background: white;
+  border: 3px solid #E0E0E0;
+  color: #1A237E;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.match-item:hover:not(:disabled) {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.match-item:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.match-item.selected {
+  border-color: #29B6F6;
+  background: #E1F5FE;
+  box-shadow: 0 0 0 4px rgba(41, 182, 246, 0.3);
+  animation: pulseBlue 1.5s infinite;
+}
+
+.match-item.matched {
+  border-color: #66BB6A;
+  background: #E8F5E9;
+  color: #2E7D32;
+  cursor: default;
+  opacity: 0.8;
+  animation: matchSuccess 0.5s ease-out;
+}
+
+.match-item.wrong {
+  animation: shake 0.4s ease-in-out;
+  border-color: #EF5350;
+  background: #FFEBEE;
+}
+
+@keyframes matchSuccess {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(102, 187, 106, 0.7);
+  }
+
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px 5px rgba(102, 187, 106, 0);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(102, 187, 106, 0);
+  }
+}
+
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-8px);
+  }
+
+  50% {
+    transform: translateX(8px);
+  }
+
+  75% {
+    transform: translateX(-8px);
+  }
+}
+
+@keyframes pulseBlue {
+  0% {
+    box-shadow: 0 0 0 0 rgba(41, 182, 246, 0.5);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(41, 182, 246, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(41, 182, 246, 0);
   }
 }
 

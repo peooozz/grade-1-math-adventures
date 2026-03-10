@@ -163,32 +163,41 @@ const ImageCountGrid = ({ imageUrl, count }: { imageUrl: string; count: number }
 // ─── Group Compare ──────────────────────────────────────────────────────────
 const GroupCompare = ({ groups }: { groups: { imageUrl: string; count: number; label?: string; _clockData?: any }[] }) => (
   <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-    {groups.map((g, i) => (
-      <div key={i} style={{
-        border: '2px dashed #90CAF9', borderRadius: 14, padding: '10px 12px',
-        textAlign: 'center', background: '#F0F7FF', minWidth: 90,
-      }}>
-        <div style={{ fontWeight: 800, fontSize: 14, color: '#1565C0', marginBottom: 6 }}>
-          {g.label ?? ['A', 'B', 'C'][i]}
+    {groups.map((g, i) => {
+      const isSingular = g.count === 1;
+      return (
+        <div key={i} style={{
+          border: '2.5px dashed #90CAF9', borderRadius: 20, padding: '14px 18px',
+          textAlign: 'center', background: '#F0F7FF', minWidth: isSingular ? 120 : 150,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 4px 15px rgba(33,150,243,0.1)',
+        }}>
+          {g.label && (
+            <div style={{ fontWeight: 900, fontSize: 14, color: '#1565C0', marginBottom: 8, fontFamily: "'Baloo 2',cursive" }}>
+              {g.label}
+            </div>
+          )}
+          {g._clockData ? (
+            <AnalogClock hour={g._clockData.hour} minute={g._clockData.minute} size={110} />
+          ) : (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', maxWidth: isSingular ? 140 : 180 }}>
+              {Array.from({ length: g.count }, (_, j) => (
+                <img key={j} src={g.imageUrl} alt="" style={{
+                  width: isSingular ? 110 : 50,
+                  height: isSingular ? 110 : 50,
+                  objectFit: 'contain',
+                  borderRadius: 8,
+                  animation: `floatItem 3s ease-in-out ${j * 0.2}s infinite, popIn 0.4s ease-out`
+                }} />
+              ))}
+            </div>
+          )}
+          {!g._clockData && !isSingular && (
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#666', marginTop: 8 }}>{g.count} items</div>
+          )}
         </div>
-        {/* Analog clock group */}
-        {g._clockData ? (
-          <AnalogClock hour={g._clockData.hour} minute={g._clockData.minute} size={90} />
-        ) : (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent: 'center', maxWidth: 120 }}>
-            {Array.from({ length: g.count }, (_, j) => (
-              <img key={j} src={g.imageUrl} alt="" style={{
-                width: 38, height: 38, objectFit: 'contain',
-                animation: `floatItem 2.5s ease-in-out ${j * 0.15}s infinite`
-              }} />
-            ))}
-          </div>
-        )}
-        {!g._clockData && (
-          <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>{g.count} items</div>
-        )}
-      </div>
-    ))}
+      );
+    })}
   </div>
 );
 
@@ -262,11 +271,15 @@ const WorksheetSection = ({ section, index, voiceEnabled = false, onSpeak }: Wor
   const [showFun, setShowFun] = useState<Record<number, boolean>>({});
   const [inputValues, setInputValues] = useState<Record<number, string>>({});
   const [orderValues, setOrderValues] = useState<Record<number, string[]>>({}); // tracks selected order
+  const [matchSelectedLeft, setMatchSelectedLeft] = useState<Record<number, string>>({});
+  const [matchedPairs, setMatchedPairs] = useState<Record<number, string[]>>({}); // left strings
+  const [wrongMatch, setWrongMatch] = useState<Record<number, string>>({}); // wrong right string
 
   const validQs = section.questions.length;
   const correctCount = Object.entries(answers).filter(([qi, ans]) => {
     const q = section.questions[Number(qi)];
     if (q.type === 'input' || q.type === 'order') return String(ans) === String(q.correctAnswer);
+    if (q.type === 'match') return ans === 'correct';
     return q.correctIndex === Number(ans);
   }).length;
 
@@ -313,7 +326,7 @@ const WorksheetSection = ({ section, index, voiceEnabled = false, onSpeak }: Wor
       if (isRemove) {
         next = current.filter(v => v !== val);
       } else {
-        if (current.includes(val) || current.length >= q.choices.length) return current;
+        if (current.includes(val) || current.length >= q.choices.length) return prev;
         next = [...current, val];
       }
 
@@ -335,14 +348,48 @@ const WorksheetSection = ({ section, index, voiceEnabled = false, onSpeak }: Wor
     });
   };
 
-  const handleReset = () => { setAnswers({}); setShowFun({}); setInputValues({}); setOrderValues({}); };
+  const handleMatchSelect = (qi: number, side: 'left' | 'right', val: string) => {
+    if (answers[qi] !== undefined) return;
+    const q = section.questions[qi];
+    if (!q.matchPairs) return;
+
+    if (side === 'left') {
+      setMatchSelectedLeft(prev => ({ ...prev, [qi]: prev[qi] === val ? '' : val }));
+    } else {
+      const selectedLeft = matchSelectedLeft[qi];
+      if (!selectedLeft) return; // Must select left first
+
+      const isMatch = q.matchPairs.some(p => p.left === selectedLeft && p.right === val);
+      if (isMatch) {
+        setMatchedPairs(prev => {
+          const current = prev[qi] || [];
+          const updated = [...current, selectedLeft];
+
+          if (updated.length === q.matchPairs!.length) {
+            setAnswers(ansPrev => ({ ...ansPrev, [qi]: 'correct' }));
+            if ((q as any).funFact) setShowFun(old => ({ ...old, [qi]: true }));
+            if (voiceEnabled && onSpeak) onSpeak('Amazing! You matched them all!');
+          }
+          return { ...prev, [qi]: updated };
+        });
+        setMatchSelectedLeft(prev => ({ ...prev, [qi]: '' }));
+      } else {
+        setWrongMatch(prev => ({ ...prev, [qi]: val }));
+        setTimeout(() => setWrongMatch(prev => ({ ...prev, [qi]: '' })), 500);
+      }
+    }
+  };
+
+  const handleReset = () => {
+    setAnswers({}); setShowFun({}); setInputValues({}); setOrderValues({});
+    setMatchSelectedLeft({}); setMatchedPairs({}); setWrongMatch({});
+  };
 
   const choiceStyle = (qi: number, ci: number): React.CSSProperties => {
     const q = section.questions[qi];
-    if (answers[qi] === undefined) return {
-      cursor: 'pointer', border: '2.5px solid #90CAF9',
-      background: '#FFFDE7', color: '#1A237E', transition: 'all 0.15s',
-    };
+    const isAnswered = answers[qi] !== undefined;
+    if (!isAnswered) return {}; // Let CSS .choice-btn-idle handle it
+
     const isCorrect = ci === q.correctIndex;
     const isSelected = answers[qi] === ci;
     if (isCorrect) return {
@@ -403,23 +450,17 @@ const WorksheetSection = ({ section, index, voiceEnabled = false, onSpeak }: Wor
               {correctCount}/{validQs} ✅
             </span>
           )}
-          <button onClick={handleReset} style={{
-            padding: '4px 12px', borderRadius: 99, fontSize: 12, fontWeight: 700,
-            border: '1.5px solid #90CAF9', background: 'white', color: '#666',
-            cursor: 'pointer',
-          }}>↩️ Reset</button>
+          <button onClick={handleReset} className="reset-btn">
+            ↩️ Reset
+          </button>
         </div>
       </div>
 
-      {/* ── Perfect Banner ── */}
       {isPerfect && (
-        <div style={{
-          textAlign: 'center', fontFamily: "'Baloo 2',cursive", fontWeight: 800, fontSize: 15,
-          background: 'linear-gradient(135deg,#FFF176,#FFD54F)',
-          color: '#E65100', border: '2px solid #FFB300', borderRadius: 14,
-          padding: '8px 16px', marginBottom: 16, animation: 'popIn 0.4s ease-out',
-          boxShadow: '0 3px 12px rgba(255,179,0,0.35)',
-        }}>
+        <div
+          className="celebration-banner"
+          style={{ marginBottom: 16, animation: 'popIn 0.4s ease-out, glowPulse 2s infinite' }}
+        >
           🌟 Wow! Perfect Score! You are a Math Champion! 🏆🎉
         </div>
       )}
@@ -545,23 +586,17 @@ const WorksheetSection = ({ section, index, voiceEnabled = false, onSpeak }: Wor
                       if (e.key === 'Enter' && !isAnswered) handleInputSubmit(qi);
                     }}
                     disabled={isAnswered}
-                    placeholder="Type here..."
+                    placeholder="?"
+                    className="fun-input"
                     style={{
-                      padding: '10px 16px', borderRadius: 12, border: '2.5px solid #90CAF9',
-                      fontSize: 18, fontWeight: 700, color: '#1A237E', width: 140, textAlign: 'center',
-                      background: isAnswered ? '#f5f5f5' : 'white', fontFamily: "'Nunito',sans-serif",
+                      background: isAnswered ? '#f5f5f5' : 'white',
+                      width: 140, // and whatever else can't be in CSS
                     }}
                   />
                   <button
                     onClick={() => handleInputSubmit(qi)}
                     disabled={isAnswered || !inputValues[qi]?.trim()}
-                    style={{
-                      padding: '0 20px', borderRadius: 12, border: 'none',
-                      background: isAnswered || !inputValues[qi]?.trim() ? '#E0E0E0' : 'linear-gradient(135deg,#42A5F5,#1565C0)',
-                      color: isAnswered || !inputValues[qi]?.trim() ? '#9E9E9E' : 'white',
-                      fontWeight: 800, fontSize: 16, cursor: isAnswered || !inputValues[qi]?.trim() ? 'default' : 'pointer',
-                      transition: 'all 0.2s', fontFamily: "'Nunito',sans-serif",
-                    }}
+                    className="check-btn"
                   >
                     Check
                   </button>
@@ -644,11 +679,49 @@ const WorksheetSection = ({ section, index, voiceEnabled = false, onSpeak }: Wor
                     ))}
                   </div>
                 </div>
+              ) : q.type === 'match' && q.matchPairs ? (
+                <div className="match-grid" style={{ marginTop: 24 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {q.matchPairs.map((p, i) => {
+                      const isSelected = matchSelectedLeft[qi] === p.left;
+                      const isMatched = (matchedPairs[qi] || []).includes(p.left);
+                      return (
+                        <button key={`L-${i}`}
+                          className={`match-item ${isSelected ? 'selected' : ''} ${isMatched ? 'matched' : ''}`}
+                          onClick={() => handleMatchSelect(qi, 'left', p.left)}
+                          disabled={isMatched || isAnswered}
+                        >
+                          {p.left} {isMatched && ' ✅'}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {q.matchPairs.map((_, i) => {
+                      // Pseudo-shuffle so right side isn't identical directly across from left
+                      const displayRight = q.matchPairs![(i + 1) % q.matchPairs!.length].right;
+                      const parentLeft = q.matchPairs!.find(x => x.right === displayRight)!.left;
+                      const isWrong = wrongMatch[qi] === displayRight;
+                      const isMatched = (matchedPairs[qi] || []).includes(parentLeft);
+
+                      return (
+                        <button key={`R-${i}`}
+                          className={`match-item ${isWrong ? 'wrong' : ''} ${isMatched ? 'matched' : ''}`}
+                          onClick={() => handleMatchSelect(qi, 'right', displayRight)}
+                          disabled={isMatched || isAnswered}
+                        >
+                          {displayRight} {isMatched && ' ✅'}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               ) : (
-                q.choices.length > 0 && (
+                q.choices && q.choices.length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 10 }}>
                     {q.choices.map((choice, ci) => (
                       <button key={ci} onClick={() => handleChoice(qi, ci)}
+                        className={!isAnswered ? 'choice-btn-idle' : ''}
                         style={{
                           padding: '9px 20px', borderRadius: 99,
                           fontFamily: "'Nunito',sans-serif", fontWeight: 700, fontSize: 14,
@@ -665,14 +738,7 @@ const WorksheetSection = ({ section, index, voiceEnabled = false, onSpeak }: Wor
 
               {/* Feedback */}
               {isAnswered && (
-                <div style={{
-                  marginTop: 12, textAlign: 'center',
-                  fontFamily: "'Baloo 2',cursive", fontWeight: 800, fontSize: 14,
-                  borderRadius: 10, padding: '6px 10px',
-                  color: isCorrect ? '#2E7D32' : '#C62828',
-                  background: isCorrect ? '#E8F5E9' : '#FFEBEE',
-                  animation: 'popIn 0.3s ease-out',
-                }}>
+                <div className={isCorrect ? 'correct-feedback' : 'wrong-feedback'}>
                   {isCorrect
                     ? `🎉 Correct! ${showFun[qi] && (q as any).funFact ? (q as any).funFact : 'Well done!'}`
                     : `😊 Keep trying! Answer: ${q.type === 'input' || q.type === 'order' ? String(q.correctAnswer).replace(/,/g, ', ') : q.choices[q.correctIndex || 0]}`}
@@ -682,7 +748,7 @@ const WorksheetSection = ({ section, index, voiceEnabled = false, onSpeak }: Wor
           );
         })}
       </div>
-    </div>
+    </div >
   );
 };
 

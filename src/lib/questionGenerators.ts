@@ -13,13 +13,12 @@ export interface Question {
   analogClock?: { hour: number; minute: number }; // draws SVG analog clock
   fractionSvg?: { parts: number; shaded: number; shape: 'circle' | 'rect' }; // draws fraction
   base10?: { hundreds: number; tens: number; ones: number }; // draws base-10 blocks
-  choices: string[];
+  choices?: string[];
   correctIndex?: number;
   correctAnswer?: string | number; // For input and order questions
-  type: 'choice',
-  interactiveStyle: 'balloons',
-  interactiveStyle: 'balloons' | 'input' | 'order';
+  type?: 'choice' | 'input' | 'order' | 'match';
   interactiveStyle?: 'balloons' | 'compare-cards'; // New distinct animation styles
+  matchPairs?: { left: string; right: string }[]; // For connecting left to right
   speechText?: string;
   funFact?: string;  // shown after correct answer
 }
@@ -61,6 +60,18 @@ export const IMG = {
   shapes: '/images/math_shapes.png',
   base10: '/images/base10.png',
   fractions: '/images/fractions.png',
+  // Individual Rupees
+  c1: '/images/rupee_c1.png',
+  c2: '/images/rupee_c2.png',
+  c5: '/images/rupee_c5.png',
+  c10: '/images/rupee_c10.png',
+  c20: '/images/rupee_c20.png',
+  n10: '/images/rupee_n10.png',
+  n20: '/images/rupee_n20.png',
+  n50: '/images/rupee_n50.png',
+  n100: '/images/rupee_n100.png',
+  n200: '/images/rupee_n200.png',
+  n500: '/images/rupee_n500.png',
 };
 const countPool = [IMG.apple, IMG.balloon, IMG.star, IMG.fish, IMG.cake];
 function randImg() { return countPool[randInt(0, countPool.length - 1)]; }
@@ -329,8 +340,8 @@ function generateNumberCharts(): Section[] {
 
 // ============ 2 · COMPARING NUMBERS =========================================
 function generateComparing(): Section[] {
-  // 2a: Visual Groups (<, >, =)
-  const s1: Question[] = Array.from({ length: 6 }, () => {
+  // 1: Visual Groups (<, >, =)
+  const s1: Question[] = Array.from({ length: 5 }, () => {
     const a = randInt(1, 9), b = randInt(1, 9);
     const adjusted = a === b ? (b < 9 ? b + 1 : b - 1) : b;
     const img = randImg();
@@ -350,10 +361,10 @@ function generateComparing(): Section[] {
     };
   });
 
-  // 2b: Greater / Less / Equal (Numbers)
-  const s2: Question[] = Array.from({ length: 6 }, () => {
+  // 2: Greater / Less / Equal (Numbers)
+  const s2: Question[] = Array.from({ length: 5 }, () => {
     const a = randInt(1, 25), b = randInt(1, 25);
-    const adjusted = a === b ? (b < 25 ? b + 1 : b - 1) : b;
+    const adjusted = Math.random() > 0.8 ? a : (a === b ? (b < 25 ? b + 1 : b - 1) : b);
     const sym = a > adjusted ? '>' : a < adjusted ? '<' : '=';
     const opts = shuffle(['>', '<', '=']);
     return {
@@ -367,10 +378,10 @@ function generateComparing(): Section[] {
     };
   });
 
-  // 2c: Greatest / Least
-  const s3: Question[] = Array.from({ length: 6 }, () => {
+  // 3: Greatest or Least
+  const s3: Question[] = Array.from({ length: 5 }, () => {
     const isGreatest = Math.random() > 0.5;
-    const nums = pick(Array.from({ length: 60 }, (_, i) => i + 1), 4); // Pick 4 random nums from 1 to 40
+    const nums = pick(Array.from({ length: 60 }, (_, i) => i + 1), 4);
     const sorted = [...nums].sort((a, b) => a - b);
     const target = isGreatest ? sorted[3] : sorted[0];
     const opts = nums.map(String);
@@ -386,26 +397,201 @@ function generateComparing(): Section[] {
     };
   });
 
-  // 2d: Ordering numbers smallest to largest (Interactive Tap-to-Order)
-  const s4: Question[] = Array.from({ length: 6 }, () => {
-    const nums = shuffle([randInt(1, 10), randInt(11, 25), randInt(26, 40)]);
+  // 4: Order the Numbers Smallest to Biggest
+  const s4: Question[] = Array.from({ length: 5 }, () => {
+    const nums = shuffle([randInt(1, 15), randInt(16, 30), randInt(31, 50)]);
     const sorted = [...nums].sort((a, b) => a - b);
 
     return {
       prompt: `Put these numbers in order from SMALLEST to BIGGEST:`,
       choices: nums.map(String),
-      correctAnswer: sorted.join(','), // comma-separated for validation
+      correctAnswer: sorted.join(','),
       type: 'order',
       speechText: `Tap the numbers to put them in order from smallest to biggest: ${nums.join(', ')}.`,
       funFact: `Perfectly sorted! ${sorted.join(' is less than ')}!`,
     };
   });
 
+  // 5: Order the Numbers Biggest to Smallest
+  const s5: Question[] = Array.from({ length: 5 }, () => {
+    const nums = shuffle([randInt(1, 15), randInt(16, 30), randInt(31, 50)]);
+    const sorted = [...nums].sort((a, b) => b - a); // descending
+
+    return {
+      prompt: `Put these numbers in order from BIGGEST to SMALLEST:`,
+      choices: nums.map(String),
+      correctAnswer: sorted.join(','),
+      type: 'order',
+      speechText: `Tap the numbers to put them in order from biggest to smallest.`,
+      funFact: `Awesome! You sorted them from largest to smallest!`,
+    };
+  });
+
+  // 6: Choose the number GREATER than X
+  const s6: Question[] = Array.from({ length: 5 }, () => {
+    const target = randInt(10, 50);
+    const correct = randInt(target + 1, 99);
+    const wrong1 = randInt(1, target);
+    const wrong2 = randInt(1, target);
+    const opts = shuffle([String(correct), String(wrong1), String(wrong2)]);
+    return {
+      prompt: `Which number is GREATER than ${target}? 🎈`,
+      choices: opts,
+      correctIndex: opts.indexOf(String(correct)),
+      type: 'choice',
+      interactiveStyle: 'balloons',
+      speechText: `Which of these numbers is bigger than ${target}?`,
+      funFact: `Yes! ${correct} is greater than ${target}!`,
+    };
+  });
+
+  // 7: Choose the number LESS than X
+  const s7: Question[] = Array.from({ length: 5 }, () => {
+    const target = randInt(20, 99);
+    const correct = randInt(1, target - 1);
+    const wrong1 = randInt(target, 120);
+    const wrong2 = randInt(target, 120);
+    const opts = shuffle([String(correct), String(wrong1), String(wrong2)]);
+    return {
+      prompt: `Which number is LESS than ${target}? 🎈`,
+      choices: opts,
+      correctIndex: opts.indexOf(String(correct)),
+      type: 'choice',
+      interactiveStyle: 'balloons',
+      speechText: `Which of these numbers is smaller than ${target}?`,
+      funFact: `Correct! ${correct} is less than ${target}!`,
+    };
+  });
+
+  // 8: True or False
+  const s8: Question[] = Array.from({ length: 5 }, () => {
+    const a = randInt(1, 40), b = randInt(1, 40);
+    const isTrue = Math.random() > 0.5;
+    let sign = '';
+    if (isTrue) {
+      sign = a > b ? '>' : (a < b ? '<' : '=');
+    } else {
+      sign = a > b ? '<' : (a < b ? '>' : '=');
+    }
+    if (!isTrue && a === b) sign = ['<', '>'][randInt(0, 1)];
+
+    const ans = isTrue ? 'True' : 'False';
+    const opts = ['True', 'False'];
+    return {
+      prompt: `Is this statement True or False? \n ${a} ${sign} ${b}`,
+      choices: opts,
+      correctIndex: opts.indexOf(ans),
+      type: 'choice',
+      interactiveStyle: 'balloons',
+      speechText: `Is it true or false that ${a} is ${sign === '>' ? 'greater than' : sign === '<' ? 'less than' : 'equal to'} ${b}?`,
+      funFact: isTrue ? `That's right, it is true!` : `Good job spotting the false statement!`,
+    };
+  });
+
+  // 9: Solve and Compare
+  const s9: Question[] = Array.from({ length: 5 }, () => {
+    const a1 = randInt(1, 10), a2 = randInt(1, 10);
+    const b1 = randInt(1, 10), b2 = randInt(1, 10);
+    const sumA = a1 + a2;
+    const sumB = b1 + b2;
+    const sym = sumA > sumB ? '>' : sumA < sumB ? '<' : '=';
+    const opts = shuffle(['>', '<', '=']);
+    return {
+      prompt: `Solve both sides! Which sign goes in the middle?`,
+      visual: `${a1}+${a2}   ___   ${b1}+${b2}`,
+      choices: opts,
+      correctIndex: opts.indexOf(sym),
+      type: 'choice',
+      interactiveStyle: 'compare-cards',
+      speechText: `What goes in the blank: greater than, less than, or equal to?`,
+      funFact: `Because ${sumA} ${sym} ${sumB}!`,
+    };
+  });
+
+  // 10: Which group has MORE
+  const s10: Question[] = Array.from({ length: 5 }, () => {
+    const a = randInt(1, 9), b = randInt(1, 9);
+    const adjusted = a === b ? (b < 9 ? b + 1 : b - 1) : b;
+    const img1 = randImg();
+    const img2 = randImg();
+    const correctLabel = a > adjusted ? 'Group 1' : 'Group 2';
+    const opts = ['Group 1', 'Group 2'];
+    return {
+      prompt: `Which group has MORE items? 🧐`,
+      countGroups: [
+        { imageUrl: img1, count: a, label: 'Group 1' },
+        { imageUrl: img2, count: adjusted, label: 'Group 2' },
+      ],
+      choices: opts,
+      correctIndex: opts.indexOf(correctLabel),
+      type: 'choice',
+      interactiveStyle: 'balloons',
+      speechText: `Which group has more items? Group 1 or Group 2?`,
+      funFact: `Yes! ${Math.max(a, adjusted)} is more than ${Math.min(a, adjusted)}!`,
+    };
+  });
+
+  // 11: Which group has FEWER
+  const s11: Question[] = Array.from({ length: 5 }, () => {
+    const a = randInt(1, 9), b = randInt(1, 9);
+    const adjusted = a === b ? (b < 9 ? b + 1 : b - 1) : b;
+    const img1 = randImg();
+    const img2 = randImg();
+    const correctLabel = a < adjusted ? 'Group 1' : 'Group 2';
+    const opts = ['Group 1', 'Group 2'];
+    return {
+      prompt: `Which group has FEWER items? 🤨`,
+      countGroups: [
+        { imageUrl: img1, count: a, label: 'Group 1' },
+        { imageUrl: img2, count: adjusted, label: 'Group 2' },
+      ],
+      choices: opts,
+      correctIndex: opts.indexOf(correctLabel),
+      type: 'choice',
+      interactiveStyle: 'balloons',
+      speechText: `Which group has fewer items? Group 1 or Group 2?`,
+      funFact: `Yes! ${Math.min(a, adjusted)} is fewer than ${Math.max(a, adjusted)}!`,
+    };
+  });
+
+  // 12: Missing symbol in True statement
+  const s12: Question[] = Array.from({ length: 5 }, () => {
+    const missingRight = Math.random() > 0.5;
+    const sym = ['>', '<'][randInt(0, 1)];
+    const num = randInt(5, 50);
+    let correct = 0;
+    if (sym === '>') correct = randInt(1, num - 1);
+    else correct = randInt(num + 1, num + 20);
+    const wrong1 = sym === '>' ? randInt(num + 1, num + 20) : randInt(1, num - 1);
+    const wrong2 = num;
+    const choices = shuffle([String(correct), String(wrong1), String(wrong2)].filter((v, i, a) => a.indexOf(v) === i));
+    if (choices.length < 3) choices.push(String(randInt(100, 150)));
+
+    return {
+      prompt: `Which number makes this TRUE? ✨`,
+      visual: missingRight ? ` ${num} ${sym} _?_ ` : ` _?_ ${sym} ${num} `,
+      choices: choices,
+      correctIndex: choices.indexOf(String(correct)),
+      type: 'choice',
+      interactiveStyle: 'balloons',
+      speechText: missingRight ? `${num} is ${sym === '>' ? 'greater than' : 'less than'} what number?` : `What number is ${sym === '>' ? 'greater than' : 'less than'} ${num}?`,
+      funFact: `Awesome! The statement is now true!`,
+    };
+  });
+
   return [
     { title: 'Comparing Groups', questions: s1 },
+    { title: 'Which has MORE?', questions: s10 },
+    { title: 'Which has FEWER?', questions: s11 },
     { title: 'Greater, Less or Equal?', questions: s2 },
     { title: 'Greatest or Least?', questions: s3 },
-    { title: 'Order the Numbers', questions: s4 },
+    { title: 'Smallest to Biggest', questions: s4 },
+    { title: 'Biggest to Smallest', questions: s5 },
+    { title: 'Find the Greater Number', questions: s6 },
+    { title: 'Find the Lesser Number', questions: s7 },
+    { title: 'True or False?', questions: s8 },
+    { title: 'Solve & Compare', questions: s9 },
+    { title: 'Make it True!', questions: s12 },
   ];
 }
 
@@ -484,11 +670,35 @@ function generatePlaceValue(): Section[] {
     };
   });
 
+  // 3e: Match Tens and Ones
+  const s5: Question[] = Array.from({ length: 6 }, () => {
+    // Generate 4 distinct number pairs per question
+    const pairs = new Set<string>();
+    const matchPairs: { left: string; right: string }[] = [];
+    while (matchPairs.length < 4) {
+      const t = randInt(1, 9);
+      const o = randInt(0, 9);
+      const n = t * 10 + o;
+      if (!pairs.has(String(n))) {
+        pairs.add(String(n));
+        matchPairs.push({ left: `${t} Tens, ${o} Ones`, right: String(n) });
+      }
+    }
+    return {
+      prompt: `Match the Tens and Ones to the correct number! 🔗`,
+      choices: [], // Not needed for match
+      type: 'match',
+      matchPairs: matchPairs, // We shuffle left/right in the UI renderer
+      speechText: `Tap a box on the left, then find its matching number on the right!`,
+    };
+  });
+
   return [
     { title: '🟦 Tens and Ones (Blocks)', questions: s1 },
     { title: '🔢 Blocks → Number', questions: s2 },
     { title: '🔍 Digit in Tens/Ones Place', questions: s3 },
     { title: '🗣️ Numbers in Words', questions: s4 },
+    { title: '🔗 Match the Pairs', questions: s5 },
   ];
 }
 
@@ -688,7 +898,6 @@ function generateFractions(): Section[] {
       choices: opts,
       correctIndex: opts.indexOf(item.a),
       type: 'choice',
-      interactiveStyle: 'balloons',
       interactiveStyle: 'balloons' as const,
       speechText: item.q,
     };
@@ -711,7 +920,6 @@ function generateFractions(): Section[] {
       choices: opts,
       correctIndex: opts.indexOf(correct),
       type: 'choice',
-      interactiveStyle: 'balloons',
       interactiveStyle: 'balloons' as const,
       speechText: `${f.shaded} out of ${f.whole} parts are shaded. What fraction is that?`,
     };
@@ -782,7 +990,6 @@ function generateTime(): Section[] {
     choices: ['Morning 🌅', 'Night 🌙'],
     correctIndex: a.answer === 'Morning 🌅' ? 0 : 1,
     type: 'choice',
-    interactiveStyle: 'balloons',
     interactiveStyle: 'balloons' as const,
     speechText: `${a.text}. Does this usually happen in the morning or at night?`,
   }));
@@ -842,7 +1049,6 @@ function generateGeometry(): Section[] {
       choices: opts,
       correctIndex: opts.indexOf(s.name),
       type: 'choice',
-      interactiveStyle: 'balloons',
       interactiveStyle: 'balloons' as const,
       speechText: `Look at the shape. What is it called?`,
     };
@@ -857,7 +1063,6 @@ function generateGeometry(): Section[] {
       choices: opts,
       correctIndex: opts.indexOf(String(s.sides)),
       type: 'choice',
-      interactiveStyle: 'balloons',
       interactiveStyle: 'balloons' as const,
       speechText: `How many sides does a ${s.name} have?`,
     };
@@ -877,7 +1082,6 @@ function generateGeometry(): Section[] {
       choices: opts,
       correctIndex: opts.indexOf(s.name),
       type: 'choice',
-      interactiveStyle: 'balloons',
       interactiveStyle: 'balloons' as const,
       speechText: `${s.real}. What 3D shape is this?`,
     };
@@ -896,7 +1100,6 @@ function generateGeometry(): Section[] {
       choices: opts,
       correctIndex: opts.indexOf(s.a),
       type: 'choice',
-      interactiveStyle: 'balloons',
       interactiveStyle: 'balloons' as const,
       speechText: s.q,
     };
@@ -924,7 +1127,6 @@ function generateMeasurement(): Section[] {
     choices: [a, b],
     correctIndex: 0,
     type: 'choice',
-    interactiveStyle: 'balloons',
     interactiveStyle: 'balloons' as const,
     speechText: `Which is longer: a ${a} or a ${b}?`,
   }));
@@ -941,7 +1143,6 @@ function generateMeasurement(): Section[] {
     choices: [a, b],
     correctIndex: 0,
     type: 'choice',
-    interactiveStyle: 'balloons',
     interactiveStyle: 'balloons' as const,
     speechText: `Which is heavier: ${a} or ${b}?`,
   }));
@@ -972,7 +1173,6 @@ function generateMeasurement(): Section[] {
     choices: [item.a, item.b],
     correctIndex: 0 as const,
     type: 'choice',
-    interactiveStyle: 'balloons',
     interactiveStyle: 'balloons' as const,
     speechText: `Which can hold more water: ${item.a} or ${item.b}?`,
   }));
@@ -987,93 +1187,178 @@ function generateMeasurement(): Section[] {
 
 // ============ 10 · MONEY (Indian ₹) ========================================
 const indianCoins = [
-  { value: 1, name: '₹1 coin (one rupee)', label: '₹1' },
-  { value: 2, name: '₹2 coin (two rupees)', label: '₹2' },
-  { value: 5, name: '₹5 coin (five rupees)', label: '₹5' },
-  { value: 10, name: '₹10 coin (ten rupees)', label: '₹10' },
-  { value: 20, name: '₹20 coin (twenty rupees)', label: '₹20' },
+  { value: 1, name: '₹1 coin', label: '₹1', img: IMG.c1 },
+  { value: 2, name: '₹2 coin', label: '₹2', img: IMG.c2 },
+  { value: 5, name: '₹5 coin', label: '₹5', img: IMG.c5 },
+  { value: 10, name: '₹10 coin', label: '₹10', img: IMG.c10 },
+  { value: 20, name: '₹20 coin', label: '₹20', img: IMG.c20 },
 ];
 const indianNotes = [
-  { value: 10, name: '₹10 note', label: '₹10' },
-  { value: 50, name: '₹50 note', label: '₹50' },
-  { value: 100, name: '₹100 note', label: '₹100' },
+  { value: 10, name: '₹10 note', label: '₹10', img: IMG.n10 },
+  { value: 20, name: '₹20 note', label: '₹20', img: IMG.n20 },
+  { value: 50, name: '₹50 note', label: '₹50', img: IMG.n50 },
+  { value: 100, name: '₹100 note', label: '₹100', img: IMG.n100 },
+  { value: 200, name: '₹200 note', label: '₹200', img: IMG.n200 },
+  { value: 500, name: '₹500 note', label: '₹500', img: IMG.n500 },
 ];
 
+const allMoney = [...indianCoins, ...indianNotes];
+
 function generateMoney(): Section[] {
-  const s1: Question[] = Array.from({ length: 6 }, () => {
-    const coin = indianCoins[randInt(0, indianCoins.length - 1)];
-    const opts = shuffle(indianCoins.map(c => c.name));
+  // --- SET 1: Identify Coins & Notes (Real Images) ---
+  const s1: Question[] = Array.from({ length: 14 }, (_, i) => {
+    const item = allMoney[i % allMoney.length];
+    const choices = shuffle([item.name, ...pick(allMoney.filter(m => m.name !== item.name).map(m => m.name), 2)]);
     return {
-      prompt: `This coin says "${coin.label}". What coin is it? 🪙`,
-      imageUrl: IMG.coins,
-      choices: opts,
-      correctIndex: opts.indexOf(coin.name),
+      prompt: `Identify this ${item.value > 20 ? 'note' : 'money'}! What is it?`,
+      imageUrl: item.img,
+      choices,
+      correctIndex: choices.indexOf(item.name),
       type: 'choice',
       interactiveStyle: 'balloons',
-      speechText: `The coin is worth ${coin.value} rupees. What is it called?`,
+      speechText: `Look at the picture. What is this ${item.value > 20 ? 'note' : 'coin'} worth?`,
+      funFact: `This is a ${item.name}! Great job identifying it. 🌟`,
     };
   });
 
-  const s2: Question[] = Array.from({ length: 6 }, () => {
-    const n = randInt(2, 3);
-    const selected = Array.from({ length: n }, () => indianCoins[randInt(0, 3)]);
-    const total = selected.reduce((s, c) => s + c.value, 0);
-    const visual = selected.map(c => `[${c.label}]`).join(' + ') + ' = ₹?';
-    const opts = wrongNums(total, 2, 1, 40).map(n => `₹${n}`);
+  // --- SET 2: Add Up the Money (Visual Counting) ---
+  const s2: Question[] = Array.from({ length: 12 }, () => {
+    const numItems = randInt(2, 4);
+    const selected = Array.from({ length: numItems }, () => indianCoins[randInt(0, indianCoins.length - 1)]);
+    const total = selected.reduce((sum, item) => sum + item.value, 0);
+    const choices = wrongNums(total, 3, 1, 100).map(n => `₹${n}`);
+
     return {
-      prompt: `Add these coins together! 💰`,
-      visual,
-      imageUrl: IMG.coins,
-      choices: opts,
-      correctIndex: opts.indexOf(`₹${total}`),
+      prompt: `How much money is here in total? 💰`,
+      countGroups: selected.map(item => ({ imageUrl: item.img, count: 1, label: item.label })),
+      choices,
+      correctIndex: choices.indexOf(`₹${total}`),
       type: 'choice',
       interactiveStyle: 'balloons',
-      speechText: `Add ${selected.map(c => c.value + ' rupees').join(' and ')}. How much in total?`,
-      funFact: `${selected.map(c => c.label).join(' + ')} = ₹${total}! 🎉`,
+      speechText: `Count all the money you see. What is the total amount in rupees?`,
+      funFact: `Adding ${selected.map(s => s.label).join(' + ')} gives you ₹${total}! 🎈`,
     };
   });
 
-  const s3: Question[] = Array.from({ length: 3 }, () => {
-    const note = indianNotes[randInt(0, indianNotes.length - 1)];
-    const opts = shuffle(indianNotes.map(n => n.name));
-    return {
-      prompt: `This note says "${note.label}". What is it? 📄`,
-      imageUrl: IMG.notes,
-      choices: opts,
-      correctIndex: opts.indexOf(note.name),
-      type: 'choice',
-      interactiveStyle: 'balloons',
-      speechText: `The note is worth ${note.value} rupees. What is it called?`,
-    };
-  });
-
+  // --- SET 3: Match Item to Price ---
   const shopItems = [
-    { name: 'pencil ✏️', cost: 5 },
-    { name: 'eraser 🧹', cost: 2 },
-    { name: 'biscuit 🍪', cost: 10 },
-    { name: 'notebook 📓', cost: 20 },
-    { name: 'colour pencils 🖍️', cost: 50 },
+    { name: 'Apple 🍎', cost: 10 },
+    { name: 'Pencil ✏️', cost: 5 },
+    { name: 'Chocolate 🍫', cost: 20 },
+    { name: 'Ball ⚽', cost: 50 },
+    { name: 'Toy Car 🏎️', cost: 100 },
+    { name: 'Notebook 📓', cost: 30 },
   ];
-  const s4: Question[] = Array.from({ length: 6 }, () => {
-    const have = pick([1, 2, 5, 10, 20, 50], 1)[0];
-    const item = shopItems[randInt(0, shopItems.length - 1)];
-    const canBuy = have >= item.cost;
+
+  const s3: Question[] = [
+    {
+      prompt: "Match the items to their correct prices! 🏷️",
+      type: 'match',
+      matchPairs: shuffle(shopItems).slice(0, 4).map(item => ({
+        left: item.name,
+        right: `₹${item.cost}`
+      })),
+      speechText: "Can you match each item to how much it costs?",
+      funFact: "You are getting really good at reading price tags! 🛍️"
+    },
+    {
+      prompt: "Match the money to its value! 🪙",
+      type: 'match',
+      matchPairs: shuffle(allMoney).slice(0, 4).map(m => ({
+        left: m.label,
+        right: m.name
+      })),
+      speechText: "Match the labels on the left to the names on the right.",
+      funFact: "Perfect matching! You know your money well. 💎"
+    },
+    {
+      prompt: "Shopping Match! 🛍️",
+      type: 'match',
+      matchPairs: shuffle(shopItems).reverse().slice(0, 4).map(item => ({
+        left: item.name,
+        right: `₹${item.cost}`
+      })),
+      speechText: "One more matching game! Can you match these items to their costs?",
+      funFact: "You are a shopping master! 🛒"
+    }
+  ];
+
+  // --- SET 4: Can I Buy It? (Budgeting) ---
+  const budgetingItems = [
+    { item: 'Ice Cream 🍦', cost: 40 },
+    { item: 'Stickers ✨', cost: 15 },
+    { item: 'Juice 🧃', cost: 25 },
+    { item: 'Balloon 🎈', cost: 10 },
+    { item: 'Teddy 🧸', cost: 200 },
+  ];
+
+  const s4: Question[] = Array.from({ length: 10 }, () => {
+    const myMoney = pick([10, 20, 50, 100, 500], 1)[0];
+    const purchase = budgetingItems[randInt(0, budgetingItems.length - 1)];
+    const canBuy = myMoney >= purchase.cost;
+
     return {
-      prompt: `You have ₹${have}. A ${item.name} costs ₹${item.cost}. Can you buy it? 🛒`,
-      visual: `My money: ₹${have}\nItem cost: ₹${item.cost}`,
-      choices: ['Yes ✅', 'No ❌'],
+      prompt: `You have ₹${myMoney}. The ${purchase.item} costs ₹${purchase.cost}. Can you buy it?`,
+      visual: `MY MONEY: ₹${myMoney}\nCOST: ₹${purchase.cost}`,
+      choices: ['Yes, I can! ✅', 'No, not enough ❌'],
       correctIndex: canBuy ? 0 : 1,
       type: 'choice',
       interactiveStyle: 'balloons',
-      speechText: `You have ${have} rupees. The item costs ${item.cost} rupees. Do you have enough to buy it?`,
+      speechText: `If you have ${myMoney} rupees and the ${purchase.item} costs ${purchase.cost} rupees, do you have enough?`,
+      funFact: canBuy
+        ? `Yes! You'll even have ₹${myMoney - purchase.cost} left over. 🌈`
+        : `Not yet! You need ₹${purchase.cost - myMoney} more. 📈`,
+    };
+  });
+
+  // --- SET 5: Comparing Money (Greater/Less) ---
+  const s5: Question[] = Array.from({ length: 10 }, () => {
+    const valA = pick([5, 10, 20, 50, 100, 200], 1)[0];
+    const valB = pick([5, 10, 20, 50, 100, 200].filter(v => v !== valA), 1)[0];
+    const itemA = allMoney.find(m => m.value === valA) || allMoney[0];
+    const itemB = allMoney.find(m => m.value === valB) || allMoney[1];
+
+    return {
+      prompt: `Which amount is MORE? 👆`,
+      type: 'choice',
+      countGroups: [
+        { imageUrl: itemA.img, count: 1, label: `Choice A` },
+        { imageUrl: itemB.img, count: 1, label: `Choice B` }
+      ],
+      choices: [`₹${valA}`, `₹${valB}`],
+      correctIndex: valA > valB ? 0 : 1,
+      interactiveStyle: 'balloons',
+      speechText: `Which one here is more money? Choice A or Choice B?`,
+    };
+  });
+
+  // --- SET 6: Money Patterns (Skip counting ₹10 notes) ---
+  const s6: Question[] = Array.from({ length: 8 }, () => {
+    const start = randInt(1, 4) * 10;
+    const seq = [start, start + 10, start + 20, start + 30];
+    const missingIdx = randInt(1, 3);
+    const correct = seq[missingIdx];
+    const choices = shuffle([String(correct), ...wrongNums(correct, 2, 10, 100).map(n => String(n))]);
+
+    return {
+      prompt: `Count by 10s! What number is missing in the pattern? 🔟`,
+      visual: `SEQUENCE:${seq.map((n, i) => i === missingIdx ? '__' : n).join(',')}`,
+      imageUrl: IMG.n10,
+      choices,
+      correctIndex: choices.indexOf(String(correct)),
+      type: 'choice',
+      interactiveStyle: 'balloons',
+      speechText: `Look at the pattern. We are counting by tens. What comes next?`,
     };
   });
 
   return [
-    { title: '🪙 Identify Indian Coins', questions: s1 },
-    { title: '➕ Add the Coins', questions: s2 },
-    { title: '📄 Identify Rupee Notes', questions: s3 },
-    { title: '🛒 Can I Buy It?', questions: s4 },
+    { title: '🪙 Identify Coins & Notes', questions: s1 },
+    { title: '➕ Add the Money', questions: s2 },
+    { title: '🤝 Price Matching Game', questions: s3 },
+    { title: '🛒 Shopping Time!', questions: s4 },
+    { title: '⚖️ Which is More?', questions: s5 },
+    { title: '🔟 Money Patterns', questions: s6 },
   ];
 }
 
@@ -1207,7 +1492,6 @@ function generateWordProblems(): Section[] {
       choices: opts,
       correctIndex: opts.indexOf(String(p.a)),
       type: 'choice',
-      interactiveStyle: 'balloons',
       interactiveStyle: 'balloons' as const,
       speechText: p.q,
     };
@@ -1221,7 +1505,6 @@ function generateWordProblems(): Section[] {
       return {
         prompt: `🎯 First there were ${a}. Then ${b} more came. How many now?`,
         choices: opts, correctIndex: opts.indexOf(String(a + b)), type: 'choice',
-        interactiveStyle: 'balloons',
         interactiveStyle: 'balloons' as const,
         speechText: `First ${a}, then ${b} more arrive. How many in total?`,
       };
@@ -1231,7 +1514,6 @@ function generateWordProblems(): Section[] {
       return {
         prompt: `🎯 There were ${total}. ${a} left. How many are still there?`,
         choices: opts, correctIndex: opts.indexOf(String(b)), type: 'choice',
-        interactiveStyle: 'balloons',
         interactiveStyle: 'balloons' as const,
         speechText: `There were ${total} and ${a} left. How many remain?`,
       };
